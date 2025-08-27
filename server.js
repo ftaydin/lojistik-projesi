@@ -14,7 +14,7 @@ let database = {
     driverMessages: [],
 };
 
-// API Endpoint'leri (Değişiklik yok)
+// API Endpoint'leri
 app.post('/api/login', (req, res) => {
     const { username } = req.body;
     if (username.includes('532')) {
@@ -23,9 +23,13 @@ app.post('/api/login', (req, res) => {
         res.json({ success: true, role: 'admin', name: 'Ali Veli' });
     } else {
         res.status(401).json({ success: false, message: 'Kullanıcı bulunamadı' });
-    }
+    } 
 });
-app.get('/api/trips/active', (req, res) => res.json({ activeTrip: database.activeTrip }));
+
+app.get('/api/trips/active', (req, res) => {
+    res.json({ activeTrip: database.activeTrip });
+});
+
 app.post('/api/trips/start', (req, res) => {
     const { consignmentNumber } = req.body;
     if (database.activeTrip) {
@@ -35,6 +39,27 @@ app.post('/api/trips/start', (req, res) => {
     setTimeout(() => { if(database.activeTrip) database.activeTrip.location = { top: '60%', left: '65%' }; }, 5000);
     res.json({ success: true, trip: database.activeTrip });
 });
+
 app.post('/api/trips/complete', (req, res) => {
     if (database.activeTrip) {
-        database.activeTrip =
+        database.activeTrip = null;
+        res.json({ success: true, message: 'Sefer tamamlandı.' });
+    } else {
+        res.status(400).json({ success: false, message: 'Tamamlanacak aktif sefer yok.' });
+    } 
+});
+
+app.post('/api/messages/send', (req, res) => {
+    const { message } = req.body;
+    const newMessage = { from: 'Yönetici', content: message, time: new Date() };
+    database.driverMessages.push(newMessage);
+    res.json({ success: true, message: 'Mesaj gönderildi.' });
+});
+
+app.get('/api/messages', (req, res) => {
+    res.json({ messages: database.driverMessages });
+});
+
+app.listen(port, () => {
+    console.log(`Lojistik sunucusu ${port} portunda çalışıyor.`);
+});
